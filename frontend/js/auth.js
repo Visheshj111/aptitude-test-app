@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api/auth'; // Backend server URL
+const API_URL = 'https://aptitude-app-server-backend.onrender.com'; // Backend server URL
 
 const loginForm = document.getElementById('login');
 const registerForm = document.getElementById('register');

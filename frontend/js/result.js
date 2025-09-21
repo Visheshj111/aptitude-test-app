@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = 'https://aptitude-app-server-backend.onrender.com';
     const token = localStorage.getItem('token');
     const resultContainer = document.getElementById('result-container');
     const logoutBtn = document.getElementById('logout-btn');
