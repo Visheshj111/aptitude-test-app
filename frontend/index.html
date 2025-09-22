@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aptitude Assessment - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-100 font-sans flex items-center justify-center min-h-screen">
+
+    <div class="container mx-auto p-4 max-w-md">
+        <!-- Main Card -->
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full transition-transform duration-500" id="auth-card">
+            
+            <!-- Login Form -->
+            <div id="login-form-container">
+                <h2 class="text-3xl font-bold mb-2 text-center text-gray-800">Welcome Back!</h2>
+                <p class="text-center text-gray-500 mb-6">Please enter your details to sign in.</p>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="login-email" class="block text-gray-700 text-sm font-bold mb-2">Email Address</label>
+                        <input type="email" id="login-email" class="form-input" placeholder="you@example.com" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary w-full">Sign In</button>
+                </form>
+                <div id="login-message" class="mt-4 text-center text-red-500 font-medium"></div>
+                <p class="mt-6 text-center text-sm text-gray-600">
+                    Don't have an account? <a href="#" id="show-register" class="font-semibold text-indigo-600 hover:text-indigo-500">Register here</a>
+                </p>
+            </div>
+
+            <!-- Registration Form (Initially Hidden) -->
+            <div id="register-form-container" class="hidden">
+                <h2 class="text-3xl font-bold mb-2 text-center text-gray-800">Create an Account</h2>
+                <p class="text-center text-gray-500 mb-6">Join us to start your assessment journey.</p>
+                <form id="register-form">
+                    <div class="mb-4">
+                        <label for="register-username" class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+                        <input type="text" id="register-username" class="form-input" placeholder="John Doe" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="register-email" class="block text-gray-700 text-sm font-bold mb-2">Email Address</label>
+                        <input type="email" id="register-email" class="form-input" placeholder="you@example.com" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="register-password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                        <input type="password" id="register-password" class="form-input" placeholder="Minimum 6 characters" required>
+                    </div>
+                    <button type="submit" class="btn-primary w-full">Create Account</button>
+                </form>
+                <div id="register-message" class="mt-4 text-center text-red-500 font-medium"></div>
+                <p class="mt-6 text-center text-sm text-gray-600">
+                    Already have an account? <a href="#" id="show-login" class="font-semibold text-indigo-600 hover:text-indigo-500">Sign in</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>
+
