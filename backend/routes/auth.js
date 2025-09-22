@@ -1,69 +1,97 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-// POST /api/auth/register
+// @route   POST api/auth/register
+// @desc    Register a new user
+// @access  Public
 router.post('/register', async (req, res) => {
+    // Corrected this line to use '=' instead of 'of' for destructuring
     const { username, email, password } = req.body;
 
     try {
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
+        // Check if user already exists
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ msg: 'User already exists' });
         }
 
-        const user = await User.create({
+        // Create a new user instance
+        user = new User({
             username,
             email,
             password,
         });
 
-        // Create token
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '1d',
-        });
+        // Hash the password before saving
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
 
-        res.status(201).json({
-            message: 'User registered successfully',
-            token,
-            user: { id: user._id, username: user.username, email: user.email },
-        });
+        // Save the user to the database
+        await user.save();
 
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        // Create and return a JSON Web Token (JWT)
+        const payload = {
+            user: {
+                id: user.id,
+            },
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: 3600 }, // Token expires in 1 hour
+            (err, token) => {
+                if (err) throw err;
+                res.status(201).json({ token });
+            }
+        );
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 });
 
-// POST /api/auth/login
+// @route   POST api/auth/login
+// @desc    Authenticate user & get token (Login)
+// @access  Public
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await User.findOne({ email }).select('+password');
-
+        // Check if user exists
+        let user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
-        const isMatch = await user.matchPassword(password);
-
+        // Validate password
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '1d',
-        });
+        // Return jsonwebtoken
+        const payload = {
+            user: {
+                id: user.id,
+            },
+        };
 
-        res.status(200).json({
-            message: 'Logged in successfully',
-            token,
-            user: { id: user._id, username: user.username, email: user.email },
-        });
-
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: 3600 },
+            (err, token) => {
+                if (err) throw err;
+                res.json({ token });
+            }
+        );
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 });
 

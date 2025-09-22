@@ -4,34 +4,40 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// Import routes
+// Import routes to be used by the application
 const authRoutes = require('./routes/auth');
 const questionRoutes = require('./routes/questions');
 const resultRoutes = require('./routes/results');
 
+// Initialize the Express application
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Body parser for JSON format
+// --- Middleware ---
+// Enable Cross-Origin Resource Sharing (CORS) to allow the frontend to communicate with the backend
+app.use(cors());
+// Enable the Express app to parse JSON formatted request bodies
+app.use(express.json());
 
-// MongoDB Connection
+// --- MongoDB Database Connection ---
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log('Successfully connected to MongoDB Atlas!'))
-.catch(err => console.error('MongoDB connection error:', err));
+    .then(() => console.log('Successfully connected to MongoDB Atlas!'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
-
-// API Routes
+// --- API Routes ---
+// Any request to '/api/auth' will be handled by the authRoutes file
 app.use('/api/auth', authRoutes);
-app.use('/api/questions', require('./routes/questions'));
+// Any request to '/api/questions' will be handled by the questionRoutes file
+app.use('/api/questions', questionRoutes);
+// Any request to '/api/results' will be handled by the resultRoutes file
 app.use('/api/results', resultRoutes);
 
-// Simple root route for testing
+// A simple root route to confirm the backend is running
 app.get('/', (req, res) => {
-    res.send('Assessment App Backend is running!');
+    res.send('Aptitude Assessment Backend is running!');
 });
 
+// Start the server and listen for incoming requests on the specified port
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
