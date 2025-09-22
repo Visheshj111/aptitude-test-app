@@ -1,65 +1,96 @@
-const API_URL = 'https://aptitude-app-server-backend.onrender.com'; // Backend server URL
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-const loginForm = document.getElementById('login');
-const registerForm = document.getElementById('register');
-const messageDiv = document.getElementById('message');
-
-registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('register-username').value;
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
+// @route   POST api/auth/register
+// @desc    Register a new user
+// @access  Public
+router.post('/register', async (req, res) => {
+    // Corrected syntax from 'of' to '='
+    const { username, email, password } = req.body;
 
     try {
-        const res = await fetch(`${API_URL}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password }),
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-            messageDiv.textContent = 'Registration successful! Redirecting...';
-            messageDiv.className = 'text-green-500';
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            setTimeout(() => window.location.href = 'test.html', 1500);
-        } else {
-            messageDiv.textContent = data.message || 'Registration failed.';
-             messageDiv.className = 'text-red-500';
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ msg: 'User already exists' });
         }
-    } catch (error) {
-        messageDiv.textContent = 'An error occurred. Please try again.';
-        messageDiv.className = 'text-red-500';
+
+        // Create a new user with the plain text password.
+        // The pre-save hook in the User.js model will automatically hash it.
+        // This fixes the double-hashing bug.
+        user = new User({
+            username,
+            email,
+            password,
+        });
+        
+        await user.save();
+
+        const payload = {
+            user: {
+                id: user.id,
+            },
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: 3600 }, // Token expires in 1 hour
+            (err, token) => {
+                if (err) throw err;
+                res.status(201).json({ token });
+            }
+        );
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 });
 
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+// @route   POST api/auth/login
+// @desc    Authenticate user & get token (Login)
+// @access  Public
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
 
     try {
-        const res = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-            messageDiv.textContent = 'Login successful! Redirecting...';
-            messageDiv.className = 'text-green-500';
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            setTimeout(() => window.location.href = 'test.html', 1500);
-        } else {
-            messageDiv.textContent = data.message || 'Login failed.';
-            messageDiv.className = 'text-red-500';
+        // --- THIS IS THE LOGIN FIX ---
+        // We must explicitly select the password, which is hidden by default.
+        let user = await User.findOne({ email }).select('+password');
+
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
         }
-    } catch (error) {
-        messageDiv.textContent = 'An error occurred. Please try again.';
-        messageDiv.className = 'text-red-500';
+
+        // Use the built-in method from User.js to compare passwords
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
+
+        // Return jsonwebtoken
+        const payload = {
+            user: {
+                id: user.id,
+            },
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: 3600 },
+            (err, token) => {
+                if (err) throw err;
+                res.json({ token });
+            }
+        );
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 });
+
+module.exports = router;
 
