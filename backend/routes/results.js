@@ -2,15 +2,23 @@ const express = require('express');
 const router = express.Router();
 const Result = require('../models/Result');
 const Question = require('../models/Question');
+const User = require('../models/User'); // We need to import the User model to find the user's email
 const authMiddleware = require('../middleware/authMiddleware');
 
-// POST /api/results/submit
-// Submits answers, calculates score, and saves the result
+// @route   POST api/results/submit
+// @desc    Submits test, calculates score, and saves result with the user's email
+// @access  Private
 router.post('/submit', authMiddleware, async (req, res) => {
-    const { answers } = req.body; // Expects answers in format: { "questionId": "selectedOption" }
+    const { answers } = req.body;
     const userId = req.user.id;
 
     try {
+        // --- NEW STEP: Find the user who submitted the test to get their email ---
+        const user = await User.findById(userId).select('email');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
         const questionIds = Object.keys(answers);
         const correctAnswers = await Question.find({ '_id': { $in: questionIds } });
 
@@ -24,32 +32,33 @@ router.post('/submit', authMiddleware, async (req, res) => {
         const totalQuestions = questionIds.length;
         const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
         
+        // If a result for this user already exists, update it instead of creating a new one
         const existingResult = await Result.findOne({ userId });
         if (existingResult) {
             existingResult.score = score;
             existingResult.totalQuestions = totalQuestions;
             existingResult.percentage = percentage;
+            existingResult.userEmail = user.email; // Also update the email here
             existingResult.submittedAt = Date.now();
             await existingResult.save();
-            res.status(200).json({
-                message: "Result updated successfully",
-                result: existingResult
+            return res.status(200).json({
+                message: "Test submitted successfully! Your result has been updated.",
             });
-            return;
         }
-
-        const result = new Result({
+        
+        // Create a new result document if one doesn't exist
+        const newResult = new Result({
             userId,
+            userEmail: user.email, // Save the user's email along with the result
             score,
             totalQuestions,
             percentage
         });
 
-        await result.save();
+        await newResult.save();
 
         res.status(201).json({ 
             message: "Test submitted successfully!",
-            result
         });
 
     } catch (error) {
@@ -59,8 +68,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
 });
 
 
-// GET /api/results
-// Fetches the latest result for the logged-in user
+// This route is no longer needed for the student view but is useful for potential admin features.
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const result = await Result.findOne({ userId: req.user.id }).sort({ submittedAt: -1 });

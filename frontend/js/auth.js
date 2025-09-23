@@ -1,96 +1,82 @@
-const express = require('express');
-const router = express.Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const loginMessage = document.getElementById('login-message');
+    const registerMessage = document.getElementById('register-message');
+    const showRegisterBtn = document.getElementById('show-register');
+    const showLoginBtn = document.getElementById('show-login');
+    const loginContainer = document.getElementById('login-form-container');
+    const registerContainer = document.getElementById('register-form-container');
 
-// @route   POST api/auth/register
-// @desc    Register a new user
-// @access  Public
-router.post('/register', async (req, res) => {
-    // Corrected syntax from 'of' to '='
-    const { username, email, password } = req.body;
+    // Switch to Register form
+    showRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginContainer.classList.add('hidden');
+        registerContainer.classList.remove('hidden');
+    });
 
-    try {
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
-        }
+    // Switch to Login form
+    showLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerContainer.classList.add('hidden');
+        loginContainer.classList.remove('hidden');
+    });
 
-        // Create a new user with the plain text password.
-        // The pre-save hook in the User.js model will automatically hash it.
-        // This fixes the double-hashing bug.
-        user = new User({
-            username,
-            email,
-            password,
+    // Handle Login
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            loginMessage.textContent = '';
+
+            try {
+                // --- THIS IS WHERE THE LOCAL SERVER ADDRESS GOES ---
+                const res = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Login failed');
+
+                localStorage.setItem('token', data.token);
+                window.location.href = 'test.html';
+
+            } catch (err) {
+                loginMessage.textContent = err.message;
+            }
         });
-        
-        await user.save();
+    }
 
-        const payload = {
-            user: {
-                id: user.id,
-            },
-        };
+    // Handle Registration
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            registerMessage.textContent = '';
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: 3600 }, // Token expires in 1 hour
-            (err, token) => {
-                if (err) throw err;
-                res.status(201).json({ token });
+            try {
+                // --- AND IT GOES HERE AS WELL ---
+                const res = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password }),
+                });
+                
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Registration failed');
+
+                localStorage.setItem('token', data.token);
+                window.location.href = 'test.html';
+
+            } catch (err) {
+                registerMessage.textContent = err.message;
             }
-        );
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        });
     }
 });
-
-// @route   POST api/auth/login
-// @desc    Authenticate user & get token (Login)
-// @access  Public
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        // --- THIS IS THE LOGIN FIX ---
-        // We must explicitly select the password, which is hidden by default.
-        let user = await User.findOne({ email }).select('+password');
-
-        if (!user) {
-            return res.status(400).json({ msg: 'Invalid Credentials' });
-        }
-
-        // Use the built-in method from User.js to compare passwords
-        const isMatch = await user.matchPassword(password);
-        if (!isMatch) {
-            return res.status(400).json({ msg: 'Invalid Credentials' });
-        }
-
-        // Return jsonwebtoken
-        const payload = {
-            user: {
-                id: user.id,
-            },
-        };
-
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: 3600 },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token });
-            }
-        );
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
-});
-
-module.exports = router;
 

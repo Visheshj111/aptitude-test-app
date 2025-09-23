@@ -6,6 +6,12 @@ const ResultSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    // --- NEW FIELD ---
+    // We will now store the user's email directly for easy viewing.
+    userEmail: {
+        type: String,
+        required: true,
+    },
     score: {
         type: Number,
         required: true,
