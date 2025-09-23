@@ -14,14 +14,27 @@ const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
 
-// --- THIS IS THE FIX ---
-// We are configuring CORS to specifically allow requests only from your live Netlify frontend.
-// This is a crucial security best practice.
+// --- THIS IS THE CORS FIX ---
+// We define a list of approved frontend URLs.
+const allowedOrigins = [
+    'https://cognizant-assessment.netlify.app',
+    'https://aptitude-test-app-kappa.vercel.app', // Your Vercel domain from the prompt
+    'https://bottleup.me' // Your future custom domain
+];
+
 const corsOptions = {
-    origin: 'https://cognizant-assessment.netlify.app',
-    optionsSuccessStatus: 200 // For legacy browser support
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    }
 };
 app.use(cors(corsOptions));
+
 
 // Enable the Express app to parse JSON formatted request bodies
 app.use(express.json());
@@ -36,6 +49,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/results', resultRoutes);
 
+// --- THIS IS THE DEBUG TEST ROUTE ---
+app.get("/api/test", (req, res) => {
+    res.json({ message: "Backend is reachable and CORS is configured correctly! ✅" });
+});
+
+
 // A simple root route to confirm the backend is running
 app.get('/', (req, res) => {
     res.send('Aptitude Assessment Backend is running!');
@@ -45,3 +64,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
