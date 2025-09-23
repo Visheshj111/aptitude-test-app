@@ -4,18 +4,25 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// Import routes to be used by the application
+// Import routes
 const authRoutes = require('./routes/auth');
 const questionRoutes = require('./routes/questions');
 const resultRoutes = require('./routes/results');
 
-// Initialize the Express application
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
-// Enable Cross-Origin Resource Sharing (CORS) to allow the frontend to communicate with the backend
-app.use(cors());
+
+// --- THIS IS THE FIX ---
+// We are configuring CORS to specifically allow requests only from your live Netlify frontend.
+// This is a crucial security best practice.
+const corsOptions = {
+    origin: 'https://cognizant-assessment.netlify.app',
+    optionsSuccessStatus: 200 // For legacy browser support
+};
+app.use(cors(corsOptions));
+
 // Enable the Express app to parse JSON formatted request bodies
 app.use(express.json());
 
@@ -25,11 +32,8 @@ mongoose.connect(process.env.MONGO_URI)
     .catch(err => console.error('MongoDB connection error:', err));
 
 // --- API Routes ---
-// Any request to '/api/auth' will be handled by the authRoutes file
 app.use('/api/auth', authRoutes);
-// Any request to '/api/questions' will be handled by the questionRoutes file
 app.use('/api/questions', questionRoutes);
-// Any request to '/api/results' will be handled by the resultRoutes file
 app.use('/api/results', resultRoutes);
 
 // A simple root route to confirm the backend is running
@@ -37,8 +41,7 @@ app.get('/', (req, res) => {
     res.send('Aptitude Assessment Backend is running!');
 });
 
-// Start the server and listen for incoming requests on the specified port
+// Start the server and listen for incoming requests
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
