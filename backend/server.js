@@ -14,23 +14,25 @@ const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
 
-// --- THIS IS THE CORS FIX ---
-// We define a list of approved frontend URLs.
+// --- THIS IS THE DEFINITIVE CORS FIX ---
+// We create a "guest list" of all the frontend URLs that are allowed to talk to this backend.
 const allowedOrigins = [
-    'https://cognizant-assessment.netlify.app',
-    'https://aptitude-test-app-kappa.vercel.app', // Your Vercel domain from the prompt
-    'https://bottleup.me' // Your future custom domain
+    'https://aptitude-test-2vketx4mg-visheshj111s-projects.vercel.app',
+    'https://aptitude-test-app-kappa.vercel.app',
+    'https://bottleup.me',      // Your future custom domain
+    'http://localhost:5500',  // For local testing with VS Code Live Server
+    'http://127.0.0.1:5500'   // Also for local testing
 ];
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+        // If the incoming request's domain is on our guest list, allow it.
+        // The '!origin' part allows requests from tools like Postman or Insomnia.
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('This origin is not allowed by CORS policy.'));
         }
-        return callback(null, true);
     }
 };
 app.use(cors(corsOptions));
@@ -49,12 +51,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/results', resultRoutes);
 
-// --- THIS IS THE DEBUG TEST ROUTE ---
-app.get("/api/test", (req, res) => {
-    res.json({ message: "Backend is reachable and CORS is configured correctly! ✅" });
-});
-
-
 // A simple root route to confirm the backend is running
 app.get('/', (req, res) => {
     res.send('Aptitude Assessment Backend is running!');
@@ -64,4 +60,3 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
