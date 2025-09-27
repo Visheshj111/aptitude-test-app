@@ -60,3 +60,15 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+const cors = require('cors');
+
+app.use(cors({
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'https://aptitude-test-2vketx4mg-visheshj111s-projects.vercel.app',
+        'https://aptitude-test-app-kappa.vercel.app'  // Your actual Vercel URL
+    ],
+    credentials: true
+}));
