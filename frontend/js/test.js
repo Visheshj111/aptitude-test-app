@@ -42,9 +42,10 @@ async function fetchQuestions() {
     document.getElementById('question-container').innerHTML = '<p class="text-center text-gray-500">Loading your personalized test...</p>';
 
     try {
-        // NOTE: Use your local server for testing, and your live Render URL for deployment.
-        const apiBaseUrl = 'http://localhost:5000'; 
-        // const apiBaseUrl = 'https://aptitude-app-server-backend.onrender.com';
+        // Dynamic API base URL
+        const apiBaseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : 'https://aptitude-app-server-backend.onrender.com';
 
         const res = await fetch(`${apiBaseUrl}/api/questions/test`, {
             method: 'GET',
@@ -91,10 +92,11 @@ function displayQuestion() {
         `;
     });
 
+
     questionContainer.innerHTML = `
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">${currentQuestionIndex + 1}. ${question.questionText.replace(/\n/g, '<br>')}</h2>
-        <div class="options-container">${optionsHtml}</div>
-    `;
+    <h2 class="text-xl font-semibold mb-4 text-gray-800">${currentQuestionIndex + 1}. ${question.questionText}</h2>
+    <div class="options-container">${optionsHtml}</div>
+`;
 
     document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
     document.getElementById('submit-btn').style.display = 'none'; // Hide submit until the last question
@@ -139,8 +141,10 @@ async function submitTest() {
     }
 
     try {
-        const apiBaseUrl = 'http://localhost:5000'; 
-        // const apiBaseUrl = 'https://aptitude-app-server-backend.onrender.com';
+        // Dynamic API base URL
+        const apiBaseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : 'https://aptitude-app-server-backend.onrender.com';
 
         const res = await fetch(`${apiBaseUrl}/api/results/submit`, {
             method: 'POST',
@@ -163,4 +167,3 @@ async function submitTest() {
         alert(`An error occurred: ${err.message}`);
     }
 }
-

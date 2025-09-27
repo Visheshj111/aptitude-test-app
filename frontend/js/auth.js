@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginContainer = document.getElementById('login-form-container');
     const registerContainer = document.getElementById('register-form-container');
 
+    // Determine API base URL based on environment
+    const apiBaseUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000' 
+        : 'https://aptitude-app-server-backend.onrender.com'; // REPLACE WITH YOUR ACTUAL RENDER URL
+
     // Switch to Register form
     showRegisterBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -31,8 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginMessage.textContent = '';
 
             try {
-                // --- THIS IS WHERE THE LOCAL SERVER ADDRESS GOES ---
-                const res = await fetch('http://localhost:5000/api/auth/login', {
+                const res = await fetch(`${apiBaseUrl}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password }),
@@ -60,8 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             registerMessage.textContent = '';
 
             try {
-                // --- AND IT GOES HERE AS WELL ---
-                const res = await fetch('http://localhost:5000/api/auth/register', {
+                const res = await fetch(`${apiBaseUrl}/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password }),
@@ -79,4 +82,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
