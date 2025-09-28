@@ -3,37 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aptitude Test</title>
+    <title>Aptitude Test - In Progress</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-slate-100 font-sans flex items-center justify-center min-h-screen">
-    <div class="container mx-auto p-4 max-w-2xl">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-full">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Aptitude Test</h1>
-                <div id="timer" class="text-lg font-semibold bg-blue-100 text-blue-800 px-4 py-2 rounded-md">10:00</div>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 font-['Plus_Jakarta_Sans']">
+    
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">Aptitude Assessment</h1>
+                </div>
+                
+                <!-- Timer -->
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div id="timer" class="text-lg font-bold text-gray-800 bg-red-50 px-4 py-2 rounded-full border-2 border-red-200 min-w-[100px] text-center">10:00</div>
+                </div>
             </div>
-            
-            <!-- Progress Bar -->
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
-                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Main Layout with Sidebar -->
+    <div class="flex">
+        <!-- Left Sidebar - Question Navigation -->
+        <aside class="w-64 bg-white border-r border-gray-200 h-[calc(100vh-73px)] sticky top-[73px] overflow-y-auto sidebar-scroll">
+            <div class="p-4">
+                <h3 class="font-semibold text-gray-700 mb-3">Question Navigator</h3>
+                
+                <!-- Question Status Legend -->
+                <div class="bg-gray-50 rounded-lg p-3 mb-4 text-xs">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="flex items-center">
+                            <span class="w-3 h-3 bg-indigo-600 rounded mr-2"></span>
+                            Current
+                        </span>
+                        <span id="current-q-number" class="font-semibold">1</span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="flex items-center">
+                            <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
+                            Answered
+                        </span>
+                        <span id="answered-count" class="font-semibold">0</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                            Not Answered
+                        </span>
+                        <span id="unanswered-count" class="font-semibold">50</span>
+                    </div>
+                </div>
+                
+                <!-- Question Grid -->
+                <div class="grid grid-cols-5 gap-2" id="question-navigator">
+                    <!-- Questions will be populated here -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 px-8 py-6 max-w-4xl mx-auto w-full">
+            <!-- Progress Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm font-medium text-gray-600">Overall Progress</span>
+                    <span class="text-sm font-bold text-indigo-600" id="progress-text">0 of 50 completed</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                </div>
             </div>
 
-            <!-- Question Display Area -->
-            <div id="question-container" class="mb-6 min-h-[200px]">
-                <!-- Questions will be loaded here by JavaScript -->
+            <!-- Question Card -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-6 min-h-[400px] transition-all duration-300 hover:shadow-xl">
+                <div id="question-container" class="space-y-6">
+                    <!-- Questions will be loaded here -->
+                </div>
             </div>
 
             <!-- Navigation Buttons -->
             <div class="flex justify-between items-center">
-                <button id="next-btn" class="btn-secondary">Next Question</button>
-                <button id="submit-btn" class="btn-primary">Submit Test</button>
+                <button id="prev-btn" class="bg-gray-100 text-gray-700 font-semibold px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    <span>Previous</span>
+                </button>
+                
+                <div class="flex space-x-3">
+                    <button id="next-btn" class="bg-indigo-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <span>Next</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                    
+                    <button id="submit-btn" class="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold px-8 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 hidden">
+                        Submit Test
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Optional Right Sidebar for Additional Info -->
+        <aside class="w-64 bg-white border-l border-gray-200 h-[calc(100vh-73px)] sticky top-[73px] p-4 hidden lg:block">
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                <h4 class="font-semibold text-blue-900 mb-2">Test Instructions</h4>
+                <ul class="text-sm text-blue-800 space-y-1">
+                    <li>• All questions are mandatory</li>
+                    <li>• You can navigate between questions</li>
+                    <li>• Review your answers before submit</li>
+                    <li>• Test auto-submits when time ends</li>
+                </ul>
+            </div>
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <h4 class="font-semibold text-amber-900 mb-2">Quick Actions</h4>
+                <button class="w-full bg-amber-100 text-amber-800 font-medium py-2 rounded-lg hover:bg-amber-200 transition-colors mb-2" onclick="markForReview()">
+                    Mark for Review
+                </button>
+                <button class="w-full bg-gray-100 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-200 transition-colors" onclick="clearAnswer()">
+                    Clear Response
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Warning Modal (Initially Hidden) -->
+    <div id="submit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Submit Test?</h3>
+                <p class="text-gray-600 mb-6">Are you sure you want to submit? You cannot change your answers after submission.</p>
+                <div class="flex space-x-3 justify-center">
+                    <button onclick="closeSubmitModal()" class="px-6 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-colors duration-200">
+                        Cancel
+                    </button>
+                    <button onclick="confirmSubmit()" class="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200">
+                        Confirm Submit
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+    <!-- Left Sidebar - Question Navigation -->
+<aside class="w-64 bg-white border-r border-gray-200 h-[calc(100vh-73px)] sticky top-[73px] overflow-y-auto sidebar-scroll">
+    <div class="p-4">
+        <h3 class="font-semibold text-gray-700 mb-3">Question Navigator</h3>
+        
+        <!-- Question Status Legend -->
+        <div class="bg-gray-50 rounded-lg p-3 mb-4 text-xs">
+            <div class="flex items-center justify-between mb-2">
+                <span class="flex items-center">
+                    <span class="w-3 h-3 bg-indigo-600 rounded mr-2"></span>
+                    Current
+                </span>
+                <span id="current-q-number" class="font-semibold">1</span>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="flex items-center">
+                    <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
+                    Answered
+                </span>
+                <span id="answered-count" class="font-semibold">0</span>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="flex items-center">
+                    <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                    Not Answered
+                </span>
+                <span id="unanswered-count" class="font-semibold">50</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="flex items-center">
+                    <span class="w-3 h-3 bg-yellow-400 rounded mr-2"></span>
+                    Marked
+                </span>
+                <span id="marked-count" class="font-semibold">0</span>
+            </div>
+        </div>
+        
+        <!-- Question Grid -->
+        <div class="grid grid-cols-5 gap-2" id="question-navigator">
+            <!-- Questions will be populated here -->
+        </div>
+    </div>
+</aside>
+
     <script src="js/test.js"></script>
 </body>
 </html>
-
