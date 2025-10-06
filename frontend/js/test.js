@@ -2,16 +2,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if test was already in progress (page reload detection)
     const testInProgress = sessionStorage.getItem('testInProgress');
     if (testInProgress === 'true') {
-        // Test was in progress and page was reloaded - redirect to login
-        alert('Test session has been terminated due to page reload. Please log in again to restart.');
-        localStorage.removeItem('token');
-        sessionStorage.clear();
-        window.location.href = 'index.html';
+        // Test was in progress and page was reloaded - auto-submit what was answered
+        console.log('Page reloaded during test - auto-submitting current answers');
+        
+        // Get any answers that were saved
+        const savedAnswers = JSON.parse(sessionStorage.getItem('currentAnswers') || '{}');
+        
+        // Auto-submit with current answers
+        autoSubmitOnReload(savedAnswers);
         return;
     }
 
     // Set flag to indicate test is starting
     sessionStorage.setItem('testInProgress', 'true');
+    sessionStorage.setItem('currentAnswers', '{}');
     
     // Start the test as soon as the page loads
     fetchQuestions();
@@ -128,15 +132,7 @@ async function fetchQuestions() {
             headers: { 'x-auth-token': token },
         });
 
-        if (!res.ok) {
-            const contentType = res.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const errorData = await res.json();
-                throw new Error(errorData.msg || 'Failed to load test questions.');
-            } else {
-                throw new Error(`Server error: ${res.status} ${res.statusText}`);
-            }
-        }
+        if (!res.ok) throw new Error('Failed to load test questions.');
         
         questions = await res.json();
         if (questions.length === 0) {
@@ -357,21 +353,8 @@ async function submitTest() {
         });
 
         if (!res.ok) {
-            const contentType = res.headers.get('content-type');
-            let errorMessage = 'Failed to submit the test.';
-            
-            if (contentType && contentType.includes('application/json')) {
-                try {
-                    const errorData = await res.json();
-                    errorMessage = errorData.msg || errorMessage;
-                } catch (e) {
-                    console.error('Error parsing error response:', e);
-                }
-            } else {
-                errorMessage = `Server error: ${res.status} ${res.statusText}`;
-            }
-            
-            throw new Error(errorMessage);
+            const errorData = await res.json();
+            throw new Error(errorData.msg || 'Failed to submit the test.');
         }
 
         // Store test completion data for result page

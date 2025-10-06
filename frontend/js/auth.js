@@ -15,23 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return validEmailDomains.some(domain => email.toLowerCase().endsWith(domain));
     }
 
-    // Helper function to safely parse JSON responses
-    async function safeJsonParse(response) {
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-            try {
-                return await response.json();
-            } catch (e) {
-                throw new Error('Invalid JSON response from server');
-            }
-        } else {
-            // Non-JSON response (likely HTML error page)
-            const text = await response.text();
-            throw new Error(`Server error: ${response.status} ${response.statusText}`);
-        }
-    }
-
     // Enhanced button loading state
     function setButtonLoading(button, isLoading) {
         if (isLoading) {
@@ -95,18 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ username, email, password }),
                 });
                 
-                // Check if response is JSON before parsing
-                const contentType = res.headers.get('content-type');
-                let data;
-                
-                if (contentType && contentType.includes('application/json')) {
-                    data = await res.json();
-                } else {
-                    // Handle non-JSON responses (like HTML error pages)
-                    const text = await res.text();
-                    throw new Error(`Server error: ${res.status} ${res.statusText}`);
-                }
-                
+                const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Registration failed');
 
                 localStorage.setItem('token', data.token);
@@ -117,17 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1000);
 
             } catch (err) {
-                console.error('Registration error:', err);
-                
-                // Provide more specific error messages
-                let errorMessage = err.message;
-                if (err.message.includes('Failed to fetch')) {
-                    errorMessage = 'Unable to connect to server. Please check your internet connection.';
-                } else if (err.message.includes('Server error: 5')) {
-                    errorMessage = 'Server is currently unavailable. Please try again later.';
-                }
-                
-                showMessage(registerMessage, errorMessage);
+                showMessage(registerMessage, err.message);
                 setButtonLoading(submitButton, false);
             }
         });
