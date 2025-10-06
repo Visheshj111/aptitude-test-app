@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Clear test session flag - user reached results page successfully
+    sessionStorage.removeItem('testInProgress');
+    
     const logoutBtn = document.getElementById('logout-btn');
     
     // Display test statistics if available

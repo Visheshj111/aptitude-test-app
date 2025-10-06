@@ -1,47 +1,36 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
-    const loginMessage = document.getElementById('login-message');
     const registerMessage = document.getElementById('register-message');
-    const showRegisterBtn = document.getElementById('show-register');
-    const showLoginBtn = document.getElementById('show-login');
-    const loginContainer = document.getElementById('login-form-container');
-    const registerContainer = document.getElementById('register-form-container');
 
     // Determine API base URL based on environment
     const apiBaseUrl = window.location.hostname === 'localhost' 
         ? 'http://localhost:5000' 
         : 'https://aptitude-app-server-backend.onrender.com';
 
-    // Smooth form transitions
-    function switchForms(hideContainer, showContainer) {
-        hideContainer.style.opacity = '0';
-        hideContainer.style.transform = 'translateY(10px)';
-        
-        setTimeout(() => {
-            hideContainer.classList.add('hidden');
-            showContainer.classList.remove('hidden');
-            showContainer.style.opacity = '0';
-            showContainer.style.transform = 'translateY(10px)';
-            
-            setTimeout(() => {
-                showContainer.style.opacity = '1';
-                showContainer.style.transform = 'translateY(0)';
-            }, 50);
-        }, 300);
+    // Valid college email domains
+    const validEmailDomains = ['@iccs.ac.in', '@iimp.edu.in'];
+
+    // Function to validate college email
+    function isValidCollegeEmail(email) {
+        return validEmailDomains.some(domain => email.toLowerCase().endsWith(domain));
     }
 
-    // Switch to Register form
-    showRegisterBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchForms(loginContainer, registerContainer);
-    });
-
-    // Switch to Login form
-    showLoginBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchForms(registerContainer, loginContainer);
-    });
+    // Helper function to safely parse JSON responses
+    async function safeJsonParse(response) {
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                return await response.json();
+            } catch (e) {
+                throw new Error('Invalid JSON response from server');
+            }
+        } else {
+            // Non-JSON response (likely HTML error page)
+            const text = await response.text();
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+    }
 
     // Enhanced button loading state
     function setButtonLoading(button, isLoading) {
@@ -73,43 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Handle Login
-    if (loginForm) {
-        const submitButton = loginForm.querySelector('button[type="submit"]');
-        submitButton.dataset.originalText = submitButton.textContent;
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            setButtonLoading(submitButton, true);
-            loginMessage.style.opacity = '0';
-
-            try {
-                const res = await fetch(`${apiBaseUrl}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password }),
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.msg || 'Login failed');
-
-                localStorage.setItem('token', data.token);
-                showMessage(loginMessage, 'Login successful! Redirecting...', false);
-                
-                setTimeout(() => {
-                    window.location.href = 'test.html';
-                }, 1000);
-
-            } catch (err) {
-                showMessage(loginMessage, err.message);
-                setButtonLoading(submitButton, false);
-            }
-        });
-    }
-
     // Handle Registration
     if (registerForm) {
         const submitButton = registerForm.querySelector('button[type="submit"]');
@@ -120,6 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const username = document.getElementById('register-username').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
+            
+            // Validate college email domain
+            if (!isValidCollegeEmail(email)) {
+                showMessage(registerMessage, 'Please use a valid college email address ending with @iccs.ac.in or @iimp.edu.in');
+                return;
+            }
             
             // Basic validation
             if (password.length < 6) {
@@ -137,24 +95,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ username, email, password }),
                 });
                 
-                const data = await res.json();
+                // Check if response is JSON before parsing
+                const contentType = res.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await res.json();
+                } else {
+                    // Handle non-JSON responses (like HTML error pages)
+                    const text = await res.text();
+                    throw new Error(`Server error: ${res.status} ${res.statusText}`);
+                }
+                
                 if (!res.ok) throw new Error(data.msg || 'Registration failed');
 
                 localStorage.setItem('token', data.token);
                 showMessage(registerMessage, 'Registration successful! Redirecting...', false);
                 
                 setTimeout(() => {
-                    window.location.href = 'test.html';
+                    window.location.href = 'instructions.html';
                 }, 1000);
 
             } catch (err) {
-                showMessage(registerMessage, err.message);
+                console.error('Registration error:', err);
+                
+                // Provide more specific error messages
+                let errorMessage = err.message;
+                if (err.message.includes('Failed to fetch')) {
+                    errorMessage = 'Unable to connect to server. Please check your internet connection.';
+                } else if (err.message.includes('Server error: 5')) {
+                    errorMessage = 'Server is currently unavailable. Please try again later.';
+                }
+                
+                showMessage(registerMessage, errorMessage);
                 setButtonLoading(submitButton, false);
             }
         });
     }
-
-    // Initialize form containers with proper opacity
-    loginContainer.style.transition = 'all 0.3s ease-out';
-    registerContainer.style.transition = 'all 0.3s ease-out';
 });

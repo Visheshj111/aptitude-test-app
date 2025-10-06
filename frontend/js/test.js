@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if test was already in progress (page reload detection)
+    const testInProgress = sessionStorage.getItem('testInProgress');
+    if (testInProgress === 'true') {
+        // Test was in progress and page was reloaded - redirect to login
+        alert('Test session has been terminated due to page reload. Please log in again to restart.');
+        localStorage.removeItem('token');
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Set flag to indicate test is starting
+    sessionStorage.setItem('testInProgress', 'true');
+    
     // Start the test as soon as the page loads
     fetchQuestions();
 
@@ -6,6 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('next-btn').addEventListener('click', nextQuestion);
     document.getElementById('prev-btn').addEventListener('click', previousQuestion);
     document.getElementById('submit-btn').addEventListener('click', showSubmitModal);
+    
+    // Add beforeunload warning to prevent accidental navigation
+    window.addEventListener('beforeunload', (e) => {
+        e.preventDefault();
+        e.returnValue = 'Are you sure you want to leave? Your test progress will be lost.';
+        return 'Are you sure you want to leave? Your test progress will be lost.';
+    });
 });
 
 // Global variables to hold test state
@@ -13,7 +34,8 @@ let questions = [];
 let currentQuestionIndex = 0;
 let userAnswers = {};
 let timerInterval;
-let timeRemaining = 600; // 10 minutes in seconds
+const INITIAL_TEST_DURATION = 3600; // 1 hour in seconds
+let timeRemaining = INITIAL_TEST_DURATION;
 
 function startTimer(duration, display) {
     let timer = duration, minutes, seconds;
@@ -106,7 +128,15 @@ async function fetchQuestions() {
             headers: { 'x-auth-token': token },
         });
 
-        if (!res.ok) throw new Error('Failed to load test questions.');
+        if (!res.ok) {
+            const contentType = res.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await res.json();
+                throw new Error(errorData.msg || 'Failed to load test questions.');
+            } else {
+                throw new Error(`Server error: ${res.status} ${res.statusText}`);
+            }
+        }
         
         questions = await res.json();
         if (questions.length === 0) {
@@ -118,7 +148,7 @@ async function fetchQuestions() {
         }
         
         const timerDisplay = document.getElementById('timer');
-        startTimer(600, timerDisplay); // 10 minutes
+        startTimer(timeRemaining, timerDisplay); // 1 hour
         displayQuestion();
         createQuestionIndicators();
         updateNavigationButtons();
@@ -277,6 +307,9 @@ function confirmSubmit() {
 }
 
 function showTimeUpModal() {
+    // Clear test session flag - time expired
+    sessionStorage.removeItem('testInProgress');
+    
     alert('Time is up! Submitting your test automatically.');
     submitTest();
 }
@@ -324,17 +357,33 @@ async function submitTest() {
         });
 
         if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.msg || 'Failed to submit the test.');
+            const contentType = res.headers.get('content-type');
+            let errorMessage = 'Failed to submit the test.';
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const errorData = await res.json();
+                    errorMessage = errorData.msg || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing error response:', e);
+                }
+            } else {
+                errorMessage = `Server error: ${res.status} ${res.statusText}`;
+            }
+            
+            throw new Error(errorMessage);
         }
 
         // Store test completion data for result page
-        const timeTaken = 600 - timeRemaining;
+        const timeTaken = INITIAL_TEST_DURATION - timeRemaining;
         localStorage.setItem('testData', JSON.stringify({
             timeTaken: `${Math.floor(timeTaken / 60)}:${(timeTaken % 60).toString().padStart(2, '0')}`,
             questionsAnswered: `${Object.keys(userAnswers).length}/${questions.length}`
         }));
 
+        // Clear test session flag - test completed successfully
+        sessionStorage.removeItem('testInProgress');
+        
         window.location.href = 'result.html';
 
     } catch (err) {
