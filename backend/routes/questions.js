@@ -43,7 +43,7 @@ router.get('/test', async (req, res) => {
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ msg: 'Server Error', error: err.message });
     }
 });
 
@@ -60,7 +60,7 @@ router.post('/add', async (req, res) => {
         res.status(201).json(question);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ msg: 'Server Error', error: err.message });
     }
 });
 
