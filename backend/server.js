@@ -17,6 +17,8 @@ const PORT = process.env.PORT || 5000;
 // CORS Configuration
 const corsOptions = {
     origin: [
+        'https://www.bottleup.me',
+        'https://bottleup.me',
         'https://aptitude-test-2vketx4mg-visheshj111s-projects.vercel.app',
         'https://aptitude-test-app-kappa.vercel.app',
         'http://localhost:3000',
