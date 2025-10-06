@@ -4,18 +4,35 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const logoutBtn = document.getElementById('logout-btn');
     
-    // Display test statistics if available
-    const testData = localStorage.getItem('testData');
-    if (testData) {
-        const data = JSON.parse(testData);
-        const timeTakenEl = document.getElementById('time-taken');
-        const questionsAnsweredEl = document.getElementById('questions-answered');
+    // Display test results if available
+    const testResult = localStorage.getItem('testResult');
+    if (testResult) {
+        const data = JSON.parse(testResult);
         
+        // Display score
+        const scoreEl = document.getElementById('score-display');
+        if (scoreEl) scoreEl.textContent = `${data.score}/${data.totalQuestions}`;
+        
+        // Display percentage
+        const percentageEl = document.getElementById('percentage-display');
+        if (percentageEl) percentageEl.textContent = `${data.percentage}%`;
+        
+        // Display time taken
+        const timeTakenEl = document.getElementById('time-taken');
         if (timeTakenEl) timeTakenEl.textContent = data.timeTaken;
-        if (questionsAnsweredEl) questionsAnsweredEl.textContent = data.questionsAnswered;
+        
+        // Display questions answered
+        const questionsAnsweredEl = document.getElementById('questions-answered');
+        if (questionsAnsweredEl) questionsAnsweredEl.textContent = `${data.questionsAnswered}/${data.totalQuestions}`;
+        
+        // Show auto-submit notice if applicable
+        if (data.autoSubmitted) {
+            const noticeEl = document.getElementById('auto-submit-notice');
+            if (noticeEl) noticeEl.style.display = 'block';
+        }
         
         // Clear the data after displaying
-        localStorage.removeItem('testData');
+        localStorage.removeItem('testResult');
     }
 
     // Enhanced logout functionality
@@ -35,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('testData');
+                localStorage.removeItem('testResult');
                 window.location.href = 'index.html';
             }, 500);
         });

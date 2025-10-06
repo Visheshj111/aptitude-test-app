@@ -31,12 +31,42 @@
 
             <h1 class="text-3xl font-bold text-gray-800 mb-4">Test Submitted Successfully</h1>
             
-            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
-                Thank you for completing the aptitude assessment. Your responses have been recorded and will be reviewed by our team.
+            <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                Thank you for completing the aptitude assessment. Here are your results:
             </p>
             
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
+            <!-- Score Display -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-6 mb-6">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-1">Score</p>
+                        <p class="text-3xl font-bold text-indigo-600" id="score-display">--/--</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-1">Percentage</p>
+                        <p class="text-3xl font-bold text-purple-600" id="percentage-display">--%</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-1">Time Taken</p>
+                        <p class="text-lg font-semibold text-gray-800" id="time-taken">--:--</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-1">Questions Answered</p>
+                        <p class="text-lg font-semibold text-gray-800" id="questions-answered">--</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6" id="auto-submit-notice" style="display: none;">
                 <p class="text-sm text-blue-800">
+                    <strong>Note:</strong> Your test was auto-submitted due to page reload.
+                </p>
+            </div>
+            
+            <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-8">
+                <p class="text-sm text-green-800">
                     <strong>What's next?</strong> Our recruitment team will review your submission and contact you with the next steps.
                 </p>
             </div>

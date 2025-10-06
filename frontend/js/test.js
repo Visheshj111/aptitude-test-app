@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
 let questions = [];
 let currentQuestionIndex = 0;
 let userAnswers = {};
+let markedForReview = []; // Track questions marked for review
+let visitedQuestions = []; // Track which questions have been visited
 let timerInterval;
 const INITIAL_TEST_DURATION = 3600; // 1 hour in seconds
 let timeRemaining = INITIAL_TEST_DURATION;
@@ -103,10 +105,17 @@ function updateQuestionIndicators() {
 // Jump to specific question
 function jumpToQuestion(index) {
     saveAnswer();
+    
+    // Mark current question as visited before jumping
+    if (!visitedQuestions.includes(currentQuestionIndex)) {
+        visitedQuestions.push(currentQuestionIndex);
+    }
+    
     currentQuestionIndex = index;
     displayQuestion();
     updateNavigationButtons();
     updateQuestionIndicators();
+    updateQuestionNavigator(); // Update colors after jumping
 }
 
 async function fetchQuestions() {
@@ -147,6 +156,7 @@ async function fetchQuestions() {
         startTimer(timeRemaining, timerDisplay); // 1 hour
         displayQuestion();
         createQuestionIndicators();
+        createQuestionStatusGrid(); // Create right sidebar question grid
         updateNavigationButtons();
         updateProgressText();
 
@@ -200,9 +210,15 @@ function displayQuestion() {
         });
     }, 200);
 
+    // Mark current question as visited when displayed
+    if (!visitedQuestions.includes(currentQuestionIndex)) {
+        visitedQuestions.push(currentQuestionIndex);
+    }
+    
     updateProgressBar();
     updateProgressText();
     updateQuestionIndicators();
+    updateQuestionNavigator(); // Update navigator colors
 }
 
 function updateProgressBar() {
@@ -247,26 +263,39 @@ function saveAnswer() {
     if (selectedOption) {
         userAnswers[questions[currentQuestionIndex]._id] = selectedOption.value;
         updateProgressText();
+        updateQuestionNavigator(); // Update navigator in real-time
     }
 }
 
 function nextQuestion() {
     saveAnswer();
+    
+    // Mark current question as visited
+    if (!visitedQuestions.includes(currentQuestionIndex)) {
+        visitedQuestions.push(currentQuestionIndex);
+    }
 
     if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
         displayQuestion();
         updateNavigationButtons();
+        updateQuestionNavigator(); // Update colors when moving to next question
     }
 }
 
 function previousQuestion() {
     saveAnswer();
     
+    // Mark current question as visited
+    if (!visitedQuestions.includes(currentQuestionIndex)) {
+        visitedQuestions.push(currentQuestionIndex);
+    }
+    
     if (currentQuestionIndex > 0) {
         currentQuestionIndex--;
         displayQuestion();
         updateNavigationButtons();
+        updateQuestionNavigator(); // Update colors when moving to previous question
     }
 }
 
@@ -357,15 +386,23 @@ async function submitTest() {
             throw new Error(errorData.msg || 'Failed to submit the test.');
         }
 
+        // Get the result data from the response
+        const resultData = await res.json();
+
         // Store test completion data for result page
         const timeTaken = INITIAL_TEST_DURATION - timeRemaining;
-        localStorage.setItem('testData', JSON.stringify({
+        localStorage.setItem('testResult', JSON.stringify({
+            score: resultData.score || 0,
+            totalQuestions: resultData.totalQuestions || questions.length,
+            percentage: (resultData.percentage || 0).toFixed(2),
             timeTaken: `${Math.floor(timeTaken / 60)}:${(timeTaken % 60).toString().padStart(2, '0')}`,
-            questionsAnswered: `${Object.keys(userAnswers).length}/${questions.length}`
+            questionsAnswered: Object.keys(userAnswers).length,
+            autoSubmitted: false
         }));
 
         // Clear test session flag - test completed successfully
         sessionStorage.removeItem('testInProgress');
+        sessionStorage.removeItem('currentAnswers');
         
         window.location.href = 'result.html';
 
@@ -376,57 +413,73 @@ async function submitTest() {
     }
 }
 
-// Create question navigator in sidebar
-function createQuestionNavigator() {
-    const container = document.getElementById('question-navigator');
+// Create question status grid in right sidebar
+function createQuestionStatusGrid() {
+    const container = document.getElementById('question-status-grid');
     if (!container) return;
     
     container.innerHTML = '';
     questions.forEach((_, index) => {
         const btn = document.createElement('button');
-        btn.className = 'question-nav-btn unanswered';
+        btn.className = 'w-8 h-8 rounded flex items-center justify-center text-gray-700 font-semibold text-xs transition-all duration-200 hover:scale-110 bg-white border-2 border-gray-300';
         btn.textContent = index + 1;
         btn.onclick = () => jumpToQuestion(index);
-        btn.id = `nav-q-${index}`;
+        btn.id = `status-q-${index}`;
         container.appendChild(btn);
     });
-    updateQuestionNavigator();
 }
 
 // Update question navigator
 function updateQuestionNavigator() {
     questions.forEach((question, index) => {
-        const btn = document.getElementById(`nav-q-${index}`);
-        if (!btn) return;
+        const statusBtn = document.getElementById(`status-q-${index}`);
         
-        btn.classList.remove('current', 'answered', 'unanswered', 'marked');
-        
-        if (index === currentQuestionIndex) {
-            btn.classList.add('current');
-            document.getElementById('current-q-number').textContent = index + 1;
-        } else if (userAnswers[question._id]) {
-            btn.classList.add('answered');
-        } else {
-            btn.classList.add('unanswered');
+        // Update status button colors on right sidebar
+        if (statusBtn) {
+            // Remove all color classes
+            statusBtn.classList.remove('bg-green-500', 'bg-red-500', 'bg-yellow-300', 'bg-white', 'text-white', 'text-gray-800', 'text-gray-700', 'border-2', 'border-gray-300');
+            
+            // Apply color based on status - priority: marked > answered > visited but not answered > not visited
+            if (markedForReview.includes(index)) {
+                statusBtn.classList.add('bg-yellow-300', 'text-gray-800');
+            } else if (userAnswers[question._id]) {
+                statusBtn.classList.add('bg-green-500', 'text-white');
+            } else if (visitedQuestions.includes(index)) {
+                // Visited but not answered
+                statusBtn.classList.add('bg-red-500', 'text-white');
+            } else {
+                // Not visited yet - white
+                statusBtn.classList.add('bg-white', 'border-2', 'border-gray-300', 'text-gray-700');
+            }
         }
     });
-    
-    // Update counts
-    const answered = Object.keys(userAnswers).length;
-    document.getElementById('answered-count').textContent = answered;
-    document.getElementById('unanswered-count').textContent = questions.length - answered;
 }
 
 // Add these utility functions
 function markForReview() {
-    const btn = document.getElementById(`nav-q-${currentQuestionIndex}`);
-    btn.classList.add('marked');
-    // You can store this in a separate array if needed
+    const index = markedForReview.indexOf(currentQuestionIndex);
+    
+    if (index > -1) {
+        // Already marked, remove it
+        markedForReview.splice(index, 1);
+    } else {
+        // Not marked, add it
+        markedForReview.push(currentQuestionIndex);
+    }
+    
+    // Update the navigator to reflect the change
+    updateQuestionNavigator();
 }
 
 function clearAnswer() {
     const questionId = questions[currentQuestionIndex]._id;
     delete userAnswers[questionId];
+    
+    // Also remove from marked for review if it was marked
+    const markedIndex = markedForReview.indexOf(currentQuestionIndex);
+    if (markedIndex > -1) {
+        markedForReview.splice(markedIndex, 1);
+    }
     
     // Clear radio selection
     document.querySelectorAll('input[name="option"]').forEach(radio => {

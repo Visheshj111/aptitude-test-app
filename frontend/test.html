@@ -36,43 +36,6 @@
 
     <!-- Main Layout with Sidebar -->
     <div class="flex">
-        <!-- Left Sidebar - Question Navigation -->
-        <aside class="w-64 bg-white border-r border-gray-200 h-[calc(100vh-73px)] sticky top-[73px] overflow-y-auto sidebar-scroll">
-            <div class="p-4">
-                <h3 class="font-semibold text-gray-700 mb-3">Question Navigator</h3>
-                
-                <!-- Question Status Legend -->
-                <div class="bg-gray-50 rounded-lg p-3 mb-4 text-xs">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="flex items-center">
-                            <span class="w-3 h-3 bg-indigo-600 rounded mr-2"></span>
-                            Current
-                        </span>
-                        <span id="current-q-number" class="font-semibold">1</span>
-                    </div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="flex items-center">
-                            <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
-                            Answered
-                        </span>
-                        <span id="answered-count" class="font-semibold">0</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="flex items-center">
-                            <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
-                            Not Answered
-                        </span>
-                        <span id="unanswered-count" class="font-semibold">50</span>
-                    </div>
-                </div>
-                
-                <!-- Question Grid -->
-                <div class="grid grid-cols-5 gap-2" id="question-navigator">
-                    <!-- Questions will be populated here -->
-                </div>
-            </div>
-        </aside>
-
         <!-- Main Content Area -->
         <main class="flex-1 px-8 py-6 max-w-4xl mx-auto w-full">
             <!-- Progress Card -->
@@ -117,26 +80,45 @@
             </div>
         </main>
 
-        <!-- Optional Right Sidebar for Additional Info -->
-        <aside class="w-64 bg-white border-l border-gray-200 h-[calc(100vh-73px)] sticky top-[73px] p-4 hidden lg:block">
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                <h4 class="font-semibold text-blue-900 mb-2">Test Instructions</h4>
-                <ul class="text-sm text-blue-800 space-y-1">
-                    <li>• All questions are mandatory</li>
-                    <li>• You can navigate between questions</li>
-                    <li>• Review your answers before submit</li>
-                    <li>• Test auto-submits when time ends</li>
-                </ul>
-            </div>
-            
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <h4 class="font-semibold text-amber-900 mb-2">Quick Actions</h4>
-                <button class="w-full bg-amber-100 text-amber-800 font-medium py-2 rounded-lg hover:bg-amber-200 transition-colors mb-2" onclick="markForReview()">
-                    Mark for Review
-                </button>
-                <button class="w-full bg-gray-100 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-200 transition-colors" onclick="clearAnswer()">
-                    Clear Response
-                </button>
+        <!-- Right Sidebar - Question Status -->
+        <aside class="w-64 bg-white border-l border-gray-200 min-h-[calc(100vh-73px)] sticky top-[73px] overflow-y-auto sidebar-scroll hidden lg:block">
+            <div class="p-4">
+                <h3 class="font-semibold text-gray-700 mb-3">Question Navigator</h3>
+                
+                <!-- Question Status Legend -->
+                <div class="bg-gray-50 rounded-lg p-3 mb-4 text-xs">
+                    <div class="flex items-center mb-2">
+                        <span class="w-8 h-8 bg-white border-2 border-gray-300 rounded mr-2 flex items-center justify-center text-gray-700 font-semibold text-xs">1</span>
+                        <span>Not Visited</span>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <span class="w-8 h-8 bg-green-500 rounded mr-2 flex items-center justify-center text-white font-semibold text-xs">2</span>
+                        <span>Answered</span>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <span class="w-8 h-8 bg-red-500 rounded mr-2 flex items-center justify-center text-white font-semibold text-xs">3</span>
+                        <span>Not Answered</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 bg-yellow-300 rounded mr-2 flex items-center justify-center text-gray-800 font-semibold text-xs">4</span>
+                        <span>Marked for Review</span>
+                    </div>
+                </div>
+                
+                <!-- Question Status Grid -->
+                <div class="grid grid-cols-5 gap-2" id="question-status-grid">
+                    <!-- Question status buttons will be populated here -->
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="mt-4 space-y-2">
+                    <button class="w-full bg-yellow-300 text-gray-800 font-medium py-2 rounded-lg hover:bg-yellow-400 transition-colors" onclick="markForReview()">
+                        Mark for Review
+                    </button>
+                    <button class="w-full bg-gray-100 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-200 transition-colors" onclick="clearAnswer()">
+                        Clear Response
+                    </button>
+                </div>
             </div>
         </aside>
     </div>
@@ -163,49 +145,6 @@
             </div>
         </div>
     </div>
-    <!-- Left Sidebar - Question Navigation -->
-<aside class="w-64 bg-white border-r border-gray-200 h-[calc(100vh-73px)] sticky top-[73px] overflow-y-auto sidebar-scroll">
-    <div class="p-4">
-        <h3 class="font-semibold text-gray-700 mb-3">Question Navigator</h3>
-        
-        <!-- Question Status Legend -->
-        <div class="bg-gray-50 rounded-lg p-3 mb-4 text-xs">
-            <div class="flex items-center justify-between mb-2">
-                <span class="flex items-center">
-                    <span class="w-3 h-3 bg-indigo-600 rounded mr-2"></span>
-                    Current
-                </span>
-                <span id="current-q-number" class="font-semibold">1</span>
-            </div>
-            <div class="flex items-center justify-between mb-2">
-                <span class="flex items-center">
-                    <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
-                    Answered
-                </span>
-                <span id="answered-count" class="font-semibold">0</span>
-            </div>
-            <div class="flex items-center justify-between mb-2">
-                <span class="flex items-center">
-                    <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
-                    Not Answered
-                </span>
-                <span id="unanswered-count" class="font-semibold">50</span>
-            </div>
-            <div class="flex items-center justify-between">
-                <span class="flex items-center">
-                    <span class="w-3 h-3 bg-yellow-400 rounded mr-2"></span>
-                    Marked
-                </span>
-                <span id="marked-count" class="font-semibold">0</span>
-            </div>
-        </div>
-        
-        <!-- Question Grid -->
-        <div class="grid grid-cols-5 gap-2" id="question-navigator">
-            <!-- Questions will be populated here -->
-        </div>
-    </div>
-</aside>
 
     <script src="js/test.js"></script>
 </body>

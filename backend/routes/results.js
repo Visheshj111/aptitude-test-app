@@ -43,6 +43,10 @@ router.post('/submit', authMiddleware, async (req, res) => {
             await existingResult.save();
             return res.status(200).json({
                 message: "Test submitted successfully! Your result has been updated.",
+                score,
+                totalQuestions,
+                percentage,
+                userEmail: user.email
             });
         }
         
@@ -59,6 +63,10 @@ router.post('/submit', authMiddleware, async (req, res) => {
 
         res.status(201).json({ 
             message: "Test submitted successfully!",
+            score,
+            totalQuestions,
+            percentage,
+            userEmail: user.email
         });
 
     } catch (error) {
