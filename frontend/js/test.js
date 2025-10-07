@@ -262,6 +262,8 @@ function saveAnswer() {
     const selectedOption = document.querySelector('input[name="option"]:checked');
     if (selectedOption) {
         userAnswers[questions[currentQuestionIndex]._id] = selectedOption.value;
+        // Save answers to sessionStorage for reload protection
+        sessionStorage.setItem('currentAnswers', JSON.stringify(userAnswers));
         updateProgressText();
         updateQuestionNavigator(); // Update navigator in real-time
     }
@@ -410,6 +412,74 @@ async function submitTest() {
         console.error(err);
         alert(`An error occurred: ${err.message}`);
         closeSubmitModal();
+    }
+}
+
+// Auto-submit function when page is reloaded
+async function autoSubmitOnReload(savedAnswers) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Authentication error. Redirecting to login.');
+        sessionStorage.removeItem('testInProgress');
+        sessionStorage.removeItem('currentAnswers');
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Show loading message
+    document.body.innerHTML = `
+        <div class="fixed inset-0 bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+            <div class="bg-white rounded-2xl p-8 shadow-2xl text-center">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Auto-Submitting Test</h2>
+                <p class="text-gray-600">Page was reloaded. Submitting your answers...</p>
+            </div>
+        </div>
+    `;
+
+    try {
+        const apiBaseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : 'https://aptitude-app-server-backend.onrender.com';
+
+        const res = await fetch(`${apiBaseUrl}/api/results/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-auth-token': token
+            },
+            body: JSON.stringify({ answers: savedAnswers }),
+        });
+
+        if (!res.ok) {
+            throw new Error('Failed to submit the test.');
+        }
+
+        const resultData = await res.json();
+
+        // Store result data
+        localStorage.setItem('testResult', JSON.stringify({
+            score: resultData.score || 0,
+            totalQuestions: resultData.totalQuestions || 50,
+            percentage: (resultData.percentage || 0).toFixed(2),
+            timeTaken: 'N/A (Auto-submitted)',
+            questionsAnswered: Object.keys(savedAnswers).length,
+            autoSubmitted: true
+        }));
+
+        // Clear session flags
+        sessionStorage.removeItem('testInProgress');
+        sessionStorage.removeItem('currentAnswers');
+        
+        // Redirect to results
+        window.location.href = 'result.html';
+
+    } catch (err) {
+        console.error('Auto-submit error:', err);
+        alert('Failed to auto-submit test. Redirecting to login.');
+        sessionStorage.removeItem('testInProgress');
+        sessionStorage.removeItem('currentAnswers');
+        window.location.href = 'index.html';
     }
 }
 
