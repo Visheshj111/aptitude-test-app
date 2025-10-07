@@ -27,10 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add beforeunload warning to prevent accidental navigation
     window.addEventListener('beforeunload', (e) => {
+        // Allow navigation if we're intentionally submitting
+        if (allowNavigation) {
+            return undefined;
+        }
         e.preventDefault();
         e.returnValue = 'Are you sure you want to leave? Your test progress will be lost.';
         return 'Are you sure you want to leave? Your test progress will be lost.';
     });
+
+    // Anti-cheat measures
+    initializeAntiCheat();
 });
 
 // Global variables to hold test state
@@ -42,6 +49,7 @@ let visitedQuestions = []; // Track which questions have been visited
 let timerInterval;
 const INITIAL_TEST_DURATION = 3600; // 1 hour in seconds
 let timeRemaining = INITIAL_TEST_DURATION;
+let allowNavigation = false; // Flag to allow navigation during submission
 
 function startTimer(duration, display) {
     let timer = duration, minutes, seconds;
@@ -406,6 +414,8 @@ async function submitTest() {
         sessionStorage.removeItem('testInProgress');
         sessionStorage.removeItem('currentAnswers');
         
+        // Allow navigation without confirmation dialog
+        allowNavigation = true;
         window.location.href = 'result.html';
 
     } catch (err) {
@@ -471,6 +481,9 @@ async function autoSubmitOnReload(savedAnswers) {
         sessionStorage.removeItem('testInProgress');
         sessionStorage.removeItem('currentAnswers');
         
+        // Allow navigation without confirmation dialog
+        allowNavigation = true;
+        
         // Redirect to results
         window.location.href = 'result.html';
 
@@ -479,6 +492,9 @@ async function autoSubmitOnReload(savedAnswers) {
         alert('Failed to auto-submit test. Redirecting to login.');
         sessionStorage.removeItem('testInProgress');
         sessionStorage.removeItem('currentAnswers');
+        
+        // Allow navigation without confirmation dialog
+        allowNavigation = true;
         window.location.href = 'index.html';
     }
 }
@@ -567,4 +583,148 @@ function clearAnswer() {
 function toggleMobileMenu() {
     const sidebar = document.querySelector('aside:first-of-type');
     sidebar.classList.toggle('active');
+}
+
+// Anti-cheat system
+let tabSwitchCount = 0;
+let cheatingDetected = false;
+
+function initializeAntiCheat() {
+    // Detect tab/window switching
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showCheatingWarning('Right-click is disabled during the test.');
+        return false;
+    });
+    
+    // Disable certain keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U (developer tools)
+        if (
+            e.keyCode === 123 || // F12
+            (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+            (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+            (e.ctrlKey && e.keyCode === 85) || // Ctrl+U
+            (e.ctrlKey && e.shiftKey && e.keyCode === 67) // Ctrl+Shift+C
+        ) {
+            e.preventDefault();
+            showCheatingWarning('Developer tools are disabled during the test.');
+            tabSwitchCount++;
+            if (tabSwitchCount >= 2) {
+                triggerAntiCheatSubmit('Multiple attempts to open developer tools detected.');
+            }
+            return false;
+        }
+    });
+    
+    // Detect if developer tools are open
+    let devtoolsOpen = false;
+    const threshold = 160;
+    
+    setInterval(() => {
+        if (window.outerWidth - window.innerWidth > threshold || 
+            window.outerHeight - window.innerHeight > threshold) {
+            if (!devtoolsOpen) {
+                devtoolsOpen = true;
+                triggerAntiCheatSubmit('Developer tools detected.');
+            }
+        }
+    }, 1000);
+}
+
+function handleVisibilityChange() {
+    if (document.hidden && !cheatingDetected) {
+        tabSwitchCount++;
+        
+        if (tabSwitchCount === 1) {
+            showCheatingWarning('Warning: Tab switching detected. Your test will be auto-submitted if you switch again.');
+        } else if (tabSwitchCount >= 2) {
+            triggerAntiCheatSubmit('Multiple tab switches detected.');
+        }
+    }
+}
+
+function handleWindowBlur() {
+    if (!cheatingDetected && !document.hidden) {
+        tabSwitchCount++;
+        
+        if (tabSwitchCount === 1) {
+            showCheatingWarning('Warning: Window switching detected. Your test will be auto-submitted if you switch again.');
+        } else if (tabSwitchCount >= 2) {
+            triggerAntiCheatSubmit('Multiple window switches detected.');
+        }
+    }
+}
+
+function showCheatingWarning(message) {
+    // Create warning toast
+    const warning = document.createElement('div');
+    warning.style.cssText = `
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        font-size: 14px;
+        max-width: 400px;
+        text-align: center;
+        animation: slideDown 0.3s ease-out;
+    `;
+    warning.textContent = message;
+    document.body.appendChild(warning);
+    
+    setTimeout(() => {
+        warning.style.animation = 'slideUp 0.3s ease-out';
+        setTimeout(() => warning.remove(), 300);
+    }, 4000);
+}
+
+function triggerAntiCheatSubmit(reason) {
+    if (cheatingDetected) return; // Prevent multiple triggers
+    cheatingDetected = true;
+    
+    console.log('Anti-cheat triggered:', reason);
+    
+    // Clear anti-cheat listeners to prevent multiple triggers
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('blur', handleWindowBlur);
+    
+    // Show full-screen warning
+    document.body.innerHTML = `
+        <div class="fixed inset-0 bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
+            <div class="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md mx-4 border-2 border-red-300">
+                <div class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Test Auto-Submitted</h2>
+                <p class="text-gray-600 mb-4">${reason}</p>
+                <p class="text-sm text-red-600 font-semibold">Your test has been automatically submitted due to suspicious activity.</p>
+                <div class="loading-spinner mx-auto mt-6"></div>
+            </div>
+        </div>
+    `;
+    
+    // Save current answer and submit
+    saveAnswer();
+    
+    // Allow navigation without confirmation dialog
+    allowNavigation = true;
+    
+    // Auto-submit the test
+    setTimeout(() => {
+        const savedAnswers = JSON.parse(sessionStorage.getItem('currentAnswers') || '{}');
+        autoSubmitOnReload(savedAnswers);
+    }, 2000);
 }

@@ -1,7 +1,7 @@
 // Main entry point for the backend application
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');  // ← Moved to top
+const cors = require('cors');  // ← Moved to topI'll ad
 require('dotenv').config();
 
 // Import routes
