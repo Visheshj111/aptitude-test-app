@@ -76,6 +76,23 @@ router.post('/submit', authMiddleware, async (req, res) => {
 });
 
 
+// @route   GET api/results/check-completion
+// @desc    Check if user has already completed the test
+// @access  Private
+router.get('/check-completion', authMiddleware, async (req, res) => {
+    try {
+        const result = await Result.findOne({ userId: req.user.id });
+        
+        res.status(200).json({ 
+            hasCompleted: !!result,
+            result: result || null
+        });
+    } catch (error) {
+        console.error('Check completion error:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 // This route is no longer needed for the student view but is useful for potential admin features.
 router.get('/', authMiddleware, async (req, res) => {
     try {

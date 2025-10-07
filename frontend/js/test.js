@@ -1,4 +1,41 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Check if user has already completed the test
+    const hasCompletedTest = localStorage.getItem('testCompleted');
+    if (hasCompletedTest === 'true') {
+        alert('You have already completed the test. You cannot retake it.');
+        window.location.replace('result.html');
+        return;
+    }
+
+    // Check with backend if user has already submitted
+    const token = localStorage.getItem('token');
+    if (token) {
+        try {
+            const apiBaseUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:5000' 
+                : 'https://aptitude-app-server-backend.onrender.com';
+            
+            const checkRes = await fetch(`${apiBaseUrl}/api/results/check-completion`, {
+                method: 'GET',
+                headers: {
+                    'x-auth-token': token
+                }
+            });
+            
+            if (checkRes.ok) {
+                const data = await checkRes.json();
+                if (data.hasCompleted) {
+                    localStorage.setItem('testCompleted', 'true');
+                    alert('You have already completed the test. You cannot retake it.');
+                    window.location.replace('result.html');
+                    return;
+                }
+            }
+        } catch (err) {
+            console.error('Error checking test completion:', err);
+        }
+    }
+
     // Check if test was already in progress (page reload detection)
     const testInProgress = sessionStorage.getItem('testInProgress');
     if (testInProgress === 'true') {
@@ -414,9 +451,14 @@ async function submitTest() {
         sessionStorage.removeItem('testInProgress');
         sessionStorage.removeItem('currentAnswers');
         
+        // Mark test as completed to prevent retaking
+        localStorage.setItem('testCompleted', 'true');
+        
         // Allow navigation without confirmation dialog
         allowNavigation = true;
-        window.location.href = 'result.html';
+        
+        // Use replace instead of href to prevent back navigation
+        window.location.replace('result.html');
 
     } catch (err) {
         console.error(err);
@@ -481,11 +523,14 @@ async function autoSubmitOnReload(savedAnswers) {
         sessionStorage.removeItem('testInProgress');
         sessionStorage.removeItem('currentAnswers');
         
+        // Mark test as completed to prevent retaking
+        localStorage.setItem('testCompleted', 'true');
+        
         // Allow navigation without confirmation dialog
         allowNavigation = true;
         
-        // Redirect to results
-        window.location.href = 'result.html';
+        // Use replace to prevent back navigation to test page
+        window.location.replace('result.html');
 
     } catch (err) {
         console.error('Auto-submit error:', err);

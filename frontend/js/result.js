@@ -2,6 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear test session flag - user reached results page successfully
     sessionStorage.removeItem('testInProgress');
     
+    // Prevent going back to test page using browser back button
+    window.history.pushState(null, null, window.location.href);
+    window.addEventListener('popstate', function(event) {
+        window.history.pushState(null, null, window.location.href);
+        alert('You cannot go back to the test page. The test has been completed.');
+    });
+    
     const logoutBtn = document.getElementById('logout-btn');
     
     // Display test results if available
@@ -53,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('testData');
                 localStorage.removeItem('testResult');
+                localStorage.removeItem('testCompleted');
+                sessionStorage.clear();
                 window.location.href = 'index.html';
             }, 500);
         });
