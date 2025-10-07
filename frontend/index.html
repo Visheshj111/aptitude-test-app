@@ -7,6 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;        400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="js/expiry-check.js"></script>
+    <script>
+        // Check if test is expired BEFORE anything loads
+        if (TEST_EXPIRED) {
+            window.location.replace('expire.html');
+        }
+    </script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-gray-100 via-white to-slate-100 font-['Inter',sans-serif] overflow-hidden">
     

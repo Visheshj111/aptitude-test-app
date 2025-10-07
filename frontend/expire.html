@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Expired</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap');
+
+        /* Base styles for a dark, cosmic theme */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #030409;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
+            background-size: 25px 25px;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        /* Container for the animated elements and text */
+        .container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The main visual element: a fading, ethereal light */
+        .ethereal-light {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin-bottom: 2rem;
+            animation: fade-out-light 12s ease-in 1s forwards;
+        }
+
+        /* Simulating a nebula or a soft glow */
+        .ethereal-light::before,
+        .ethereal-light::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.7;
+        }
+        
+        /* One layer of the nebula glow */
+        .ethereal-light::before {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #6a82fb, transparent 60%);
+            transform: translate(-50%, -50%);
+            animation: slow-spin 20s linear infinite;
+        }
+
+        /* Another layer of nebula glow, spinning differently */
+        .ethereal-light::after {
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, #a777e3, transparent 60%);
+            transform: translate(-50%, -50%);
+            animation: slow-spin-reverse 25s linear infinite;
+        }
+
+        /* A central 'core' or 'spark' */
+        .spark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #fff;
+            box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px #a777e3, 0 0 60px #6a82fb;
+            animation: pulse-spark 3s ease-in-out infinite;
+        }
+        
+        /* The main text message */
+        .message {
+            font-size: 1.75rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(170, 136, 255, 0.5);
+            opacity: 0;
+            animation: fade-in-text 8s ease-in 3s forwards;
+        }
+
+        /* Animation for the spark pulsing */
+        @keyframes pulse-spark {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+
+        /* Animation for the glow layers spinning */
+        @keyframes slow-spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        @keyframes slow-spin-reverse {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(-360deg); }
+        }
+
+        /* Animation for the entire light effect fading out */
+        @keyframes fade-out-light {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+
+        /* Animation for the text fading in */
+        @keyframes fade-in-text {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 600px) {
+            .ethereal-light {
+                width: 200px;
+                height: 200px;
+            }
+            .message {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- The main animated visual element -->
+        <div class="ethereal-light">
+            <div class="spark"></div>
+        </div>
+        
+        <!-- The message that appears -->
+        <p class="message">Test time has expired.</p>
+    </div>
+
+</body>
+</html>
+
